@@ -18,6 +18,9 @@ class RSVPReader {
         this.pauseStartTime = null;
         this.lastWordIndex = 0;
         
+        // Store work buttons for dynamic updates
+        this.workButtons = new Map();
+        
         this.initializeElements();
         this.attachEventListeners();
         this.setupKeyboardShortcuts();
@@ -61,19 +64,22 @@ class RSVPReader {
             this.wpm = parseInt(e.target.value);
             this.wpmValue.textContent = this.wpm;
             this.updateTimeRemaining();
+            this.updateWorksReadingTimes();
+        });
+        this.paragraphBreakSlider.addEventListener('input', (e) => {
+            this.paragraphBreak = parseFloat(e.target.value);
+            this.paragraphBreakValue.textContent = `${this.paragraphBreak.toFixed(1)}s`;
+            this.updateWorksReadingTimes();
+        });
+        this.sentenceBreakSlider.addEventListener('input', (e) => {
+            this.sentenceBreak = parseFloat(e.target.value);
+            this.sentenceBreakValue.textContent = `${this.sentenceBreak.toFixed(1)}s`;
+            this.updateWorksReadingTimes();
         });
         this.textSizeSlider.addEventListener('input', (e) => {
             this.textSize = parseInt(e.target.value);
             this.textSizeValue.textContent = `${this.textSize}px`;
             this.wordDisplay.style.fontSize = `${this.textSize}px`;
-        });
-        this.paragraphBreakSlider.addEventListener('input', (e) => {
-            this.paragraphBreak = parseFloat(e.target.value);
-            this.paragraphBreakValue.textContent = `${this.paragraphBreak.toFixed(1)}s`;
-        });
-        this.sentenceBreakSlider.addEventListener('input', (e) => {
-            this.sentenceBreak = parseFloat(e.target.value);
-            this.sentenceBreakValue.textContent = `${this.sentenceBreak.toFixed(1)}s`;
         });
         this.playBtn.addEventListener('click', () => this.play());
         this.pauseBtn.addEventListener('click', () => this.pause());
@@ -511,40 +517,72 @@ class RSVPReader {
         }
     }
 
-    loadPublicDomainWorks() {
-        console.log('loadPublicDomainWorks called');
-        console.log('this.worksGrid:', this.worksGrid);
-        console.log('PUBLIC_DOMAIN_WORKS type:', typeof PUBLIC_DOMAIN_WORKS);
+    calculateReadingTime(wordCount, text) {
+        // Base reading time at current WPM
+        const baseTimeSeconds = (wordCount / this.wpm) * 60;
         
+        // Estimate break time if text is available
+        let breakTimeSeconds = 0;
+        if (text) {
+            // Count sentences and paragraphs
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+            const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+            
+            // Subtract 1 from counts since last sentence/paragraph doesn't have a break after it
+            const sentenceBreaks = Math.max(0, sentences.length - 1);
+            const paragraphBreaks = Math.max(0, paragraphs.length - 1);
+            
+            breakTimeSeconds = (sentenceBreaks * this.sentenceBreak) + (paragraphBreaks * this.paragraphBreak);
+        }
+        
+        const totalTimeSeconds = baseTimeSeconds + breakTimeSeconds;
+        const minutes = Math.floor(totalTimeSeconds / 60);
+        const seconds = Math.round(totalTimeSeconds % 60);
+        
+        if (minutes > 0) {
+            return seconds > 0 ? `${minutes} min ${seconds} sec` : `${minutes} min`;
+        } else {
+            return `${seconds} sec`;
+        }
+    }
+
+    updateWorksReadingTimes() {
+        if (typeof PUBLIC_DOMAIN_WORKS === 'undefined' || !this.workButtons) {
+            return;
+        }
+        
+        this.workButtons.forEach((work, button) => {
+            const timeElement = button.querySelector('.work-reading-time');
+            if (timeElement && work.text) {
+                const readingTime = this.calculateReadingTime(work.wordCount, work.text);
+                timeElement.textContent = `Estimated reading time at ${this.wpm} WPM: ${readingTime}`;
+            }
+        });
+    }
+
+    loadPublicDomainWorks() {
         if (!this.worksGrid) {
-            console.error('Works grid element not found');
             return;
         }
 
         if (typeof PUBLIC_DOMAIN_WORKS === 'undefined') {
-            console.error('PUBLIC_DOMAIN_WORKS is not defined');
             return;
         }
 
-        if (!Array.isArray(PUBLIC_DOMAIN_WORKS)) {
-            console.error('PUBLIC_DOMAIN_WORKS is not an array:', typeof PUBLIC_DOMAIN_WORKS);
+        if (!Array.isArray(PUBLIC_DOMAIN_WORKS) || PUBLIC_DOMAIN_WORKS.length === 0) {
             return;
         }
-
-        if (PUBLIC_DOMAIN_WORKS.length === 0) {
-            console.error('PUBLIC_DOMAIN_WORKS is empty');
-            return;
-        }
-
-        console.log('Loading', PUBLIC_DOMAIN_WORKS.length, 'works');
 
         // Clear any existing content
         this.worksGrid.innerHTML = '';
+        this.workButtons.clear();
         
-        PUBLIC_DOMAIN_WORKS.forEach((work, index) => {
-            console.log(`Creating button for work ${index + 1}:`, work.title);
+        PUBLIC_DOMAIN_WORKS.forEach((work) => {
             const workButton = document.createElement('button');
             workButton.className = 'work-button';
+            
+            const readingTime = this.calculateReadingTime(work.wordCount, work.text);
+            
             workButton.innerHTML = `
                 <div class="work-title">${work.title}</div>
                 <div class="work-author">${work.author} (${work.year})</div>
@@ -552,6 +590,7 @@ class RSVPReader {
                     <span class="work-level">${work.readingLevel}</span>
                     <span class="work-words">${work.wordCount.toLocaleString()} words</span>
                 </div>
+                <div class="work-reading-time">Estimated reading time at ${this.wpm} WPM: ${readingTime}</div>
             `;
             workButton.addEventListener('click', () => {
                 this.textInput.value = work.text;
@@ -560,10 +599,14 @@ class RSVPReader {
                 // Scroll to top to show the reading display
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
+            
+            // Store button reference for dynamic updates
+            this.workButtons.set(workButton, work);
             this.worksGrid.appendChild(workButton);
         });
         
-        console.log('Finished loading works. Grid now has', this.worksGrid.children.length, 'children');
+        // Initial update of reading times
+        this.updateWorksReadingTimes();
     }
 }
 

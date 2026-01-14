@@ -740,16 +740,6 @@ But her husband was on his hands and knees groping wildly on the floor in search
 
 The knocking ceased suddenly, although the echoes of it were still in the house. He heard the chair drawn back, and the door opened. A cold wind rushed up the staircase, and a long loud wail of disappointment and misery from his wife gave him courage to run down to her side, and then to the gate beyond. The street lamp flickering opposite shone on a quiet and deserted road.`
     }
-    // NOTE: "The Most Dangerous Game" was removed as it was an abridged version.
-    // It can be re-added when the complete original text is available.
-    // {
-    //     title: "The Most Dangerous Game",
-    //     author: "Richard Connell",
-    //     year: 1924,
-    //     readingLevel: "High School",
-    //     wordCount: 4102,
-    //     text: `...`
-    // }
-
+   
 ];
 

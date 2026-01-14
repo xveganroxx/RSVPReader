@@ -269,13 +269,14 @@ header h1 {
     background-color: #1a1a1a;
     border: 2px solid #444444;
     border-radius: 8px;
-    padding: 40px;
-    min-height: 300px;
+    padding: 60px 40px;
+    min-height: 400px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     margin-bottom: 20px;
+    position: relative;
 }
 
 .control-buttons {
@@ -296,7 +297,19 @@ header h1 {
     justify-content: center;
     position: relative;
     width: 100%;
-    min-height: 100px;
+    min-height: 200px;
+}
+
+.word-display::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateX(-50%);
+    pointer-events: none;
 }
 
 .word-display .word {
@@ -415,6 +428,13 @@ header h1 {
 
 .work-words {
     color: #888888;
+}
+
+.work-reading-time {
+    margin-top: 10px;
+    font-size: 0.85em;
+    color: #aaaaaa;
+    font-style: italic;
 }
 
 .reading-stats-section {
