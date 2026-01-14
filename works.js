@@ -750,7 +750,7 @@ The knocking ceased suddenly, although the echoes of it were still in the house.
     //     wordCount: 4102,
     //     text: `...`
     // }
-
+{
 "What island is it?" Rainsford asked.
 
 "The old charts call it \`Ship-Trap Island,'" Whitney replied. "A suggestive name, isn't it? Sailors have a curious dread of the place. I don't know why. Some superstition--"
